@@ -18,7 +18,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 public class DiscordRPC {
-   private static final String CLIENT_ID = "1503113086352228603";
    private DiscordRPC.Activity lastActivity = null;
    private String lastMap = "";
    private int lastRound = -1;
@@ -135,7 +134,7 @@ public class DiscordRPC {
             }
 
             this.pipe = p;
-            String hs = "{\"v\":1,\"client_id\":\"1503113086352228603\"}";
+            String hs = "{\"v\":1,\"client_id\":\"" + ZombiesConfig.INSTANCE.getDiscordClientId() + "\"}";
             this.writeFrame(0, hs);
             byte[] resp = this.readFrame();
             if (resp != null) {

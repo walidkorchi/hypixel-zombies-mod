@@ -18,10 +18,6 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.GlStateManager;
 
 public class ZombiesStatsHud extends Hud {
-   private final transient int PADDING = 6;
-   private final transient int ROW_HEIGHT = 14;
-   private final transient int HEADER_HEIGHT = 30;
-   private final transient int MIN_WIDTH = 200;
    private transient int margin = 3;
    private transient int cachedContentW = 200;
    private transient int lastPlayerCount = -1;

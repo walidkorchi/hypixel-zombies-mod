@@ -32,7 +32,6 @@ public class HypixelAPI {
    private static long lastExpiredWarning = 0L;
    private static final ConcurrentHashMap<String, HypixelAPI.MojangProfile> profileCache = new ConcurrentHashMap<>();
    private static final ConcurrentHashMap<String, HypixelAPI.CachedArcade> arcadeCache = new ConcurrentHashMap<>();
-   private static final long CACHE_TTL_MS = 600000L;
    private static final String[][] MAPS = new String[][]{
       {"Dead End", "deadend", "§d", "fastest_time_30_zombies_deadend_normal", "fastest_time_30_zombies_deadend_hard", "fastest_time_30_zombies_deadend_rip"},
       {

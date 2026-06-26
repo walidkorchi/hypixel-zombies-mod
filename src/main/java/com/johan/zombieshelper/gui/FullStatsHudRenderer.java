@@ -14,12 +14,10 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.Post;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class FullStatsHudRenderer extends Gui {
-   private static final int DISPLAY_MS = 20000;
    private static final Object LOCK = new Object();
    private static volatile FullPlayerStats pendingStats = null;
    private FullPlayerStats currentStats = null;
    private long expiryTime = 0L;
-   private static final int COLS = 10;
 
    private static String[] getHeaders() {
       return new String[]{

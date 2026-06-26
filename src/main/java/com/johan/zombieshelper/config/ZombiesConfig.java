@@ -8,6 +8,7 @@ import cc.polyfrost.oneconfig.config.annotations.Text;
 import cc.polyfrost.oneconfig.config.data.Mod;
 import cc.polyfrost.oneconfig.config.data.ModType;
 import com.johan.zombieshelper.hud.SessionHud;
+import com.johan.zombieshelper.rpc.DiscordRPC;
 import com.johan.zombieshelper.hud.StrategyGuideHud;
 import com.johan.zombieshelper.hud.ZombiesStatsHud;
 import com.johan.zombieshelper.session.SessionTracker;
@@ -123,6 +124,26 @@ public class ZombiesConfig extends Config {
       category = "Discord RPC"
    )
    public boolean discordRpcEnabled = true;
+   @Text(
+      name = "Discord Client ID",
+      description = "The Discord application Client ID used for Rich Presence. Leave default unless you use your own app.",
+      placeholder = "1503113086352228603",
+      category = "Discord RPC"
+   )
+   public String discordClientId = "1503113086352228603";
+   @Button(
+      name = "Apply Client ID",
+      text = "Apply",
+      category = "Discord RPC"
+   )
+   public Runnable applyDiscordClientId = () -> {
+      this.save();
+      DiscordRPC.getInstance().shutdown();
+      DiscordRPC.getInstance().init();
+      if (Minecraft.getMinecraft().thePlayer != null) {
+         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§a[ZombiesStats] §aDiscord Client ID applied. Reconnecting RPC..."));
+      }
+   };
    @HUD(
       name = "Session HUD",
       category = "Session"
@@ -147,6 +168,10 @@ public class ZombiesConfig extends Config {
 
    public String getApiKey() {
       return this.apiKey;
+   }
+
+   public String getDiscordClientId() {
+      return this.discordClientId != null && !this.discordClientId.trim().isEmpty() ? this.discordClientId.trim() : "1503113086352228603";
    }
 
    public String getAAChallengeString() {

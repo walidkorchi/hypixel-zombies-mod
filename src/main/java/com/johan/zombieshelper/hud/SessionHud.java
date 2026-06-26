@@ -9,10 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 
 public class SessionHud extends Hud {
-   private final transient int PADDING = 6;
-   private final transient int ROW_HEIGHT = 12;
-   private final transient int MIN_WIDTH = 200;
-   private final transient int DATA_ROWS = 7;
    private transient int margin = 3;
 
    public SessionHud() {

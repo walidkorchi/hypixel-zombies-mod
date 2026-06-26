@@ -13,8 +13,6 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 
 public class StrategyGuideHud extends Hud {
-   private final transient int PADDING = 6;
-   private final transient int ROW_HEIGHT = 12;
    private transient int margin = 3;
    private transient int currentContentWidth = 200;
    private transient int currentContentHeight = 100;

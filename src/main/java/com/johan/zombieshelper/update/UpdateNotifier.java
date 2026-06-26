@@ -27,7 +27,6 @@ public class UpdateNotifier {
    public static boolean hasUpdate = false;
    public static String latestVersion = "";
    private static long joinedServerTime = -1L;
-   private static final long SHOW_DURATION_MS = 10000L;
 
    public static void checkAsync() {
       if (!checked) {
