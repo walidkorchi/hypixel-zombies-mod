@@ -1,0 +1,12 @@
+[
+  {
+    "modid": "${id}",
+    "name": "Zombies Helper + Tracker",
+    "description": "Hypixel Zombies Stats Tracker & Custom Strategy Guide HUD which supports :\n\n- Critical Accuracy Tracking\n- Free-Form Custom Strategies",
+    "version": "${version}",
+    "mcversion": "${mcVersionStr}",
+    "updateUrl": "",
+    "authorList": ["Walidoux"],
+    "logoFile": "logo.jpg"
+  }
+]
