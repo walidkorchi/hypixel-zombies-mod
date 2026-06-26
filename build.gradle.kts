@@ -174,6 +174,11 @@ tasks {
         archiveClassifier.set("dev")
         configurations = listOf(shade, modShade)
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        // Strip multi-release (Java 9+) class variants from shaded libs (e.g. junixsocket).
+        // On Java 8 the JVM ignores them, but Forge 1.8.9's FML annotation scanner reads
+        // every .class entry and crashes on the newer bytecode, silently skipping the mod.
+        exclude("META-INF/versions/**")
+        exclude("**/module-info.class")
     }
 
     // Directory of the PrismLauncher 1.8.9 instance to deploy the built mod into.
