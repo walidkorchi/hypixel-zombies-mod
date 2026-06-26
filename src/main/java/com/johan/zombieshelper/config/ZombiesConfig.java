@@ -2,7 +2,6 @@ package com.johan.zombieshelper.config;
 
 import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.annotations.Button;
-import cc.polyfrost.oneconfig.config.annotations.Dropdown;
 import cc.polyfrost.oneconfig.config.annotations.HUD;
 import cc.polyfrost.oneconfig.config.annotations.Switch;
 import cc.polyfrost.oneconfig.config.annotations.Text;
@@ -51,12 +50,6 @@ public class ZombiesConfig extends Config {
          Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("§e[ZombiesStats] §eAPI Key successfully deleted."));
       }
    };
-   @Dropdown(
-      name = "Language",
-      description = "Language for the UI and messages.",
-      options = {"EN", "ES"}
-   )
-   public int language = 0;
    @HUD(
       name = "Lobby Stats HUD",
       category = "Stats HUD"
@@ -154,10 +147,6 @@ public class ZombiesConfig extends Config {
 
    public String getApiKey() {
       return this.apiKey;
-   }
-
-   public String getLanguageString() {
-      return this.language == 0 ? "EN" : "ES";
    }
 
    public String getAAChallengeString() {

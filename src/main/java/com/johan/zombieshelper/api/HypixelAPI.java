@@ -2,7 +2,6 @@ package com.johan.zombieshelper.api;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.johan.zombieshelper.LanguageManager;
 import com.johan.zombieshelper.config.ZombiesConfig;
 import com.johan.zombieshelper.data.FullMapStats;
 import com.johan.zombieshelper.data.FullPlayerStats;
@@ -103,7 +102,7 @@ public class HypixelAPI {
             }
          });
       } else {
-         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + LanguageManager.get("api.key.missing")));
+         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] API Key not configured. Use /zh api <key>"));
       }
    }
 
@@ -112,7 +111,7 @@ public class HypixelAPI {
       if (apiKey != null && !apiKey.isEmpty()) {
          Minecraft.getMinecraft()
             .thePlayer
-            .addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + LanguageManager.get("api.fetching") + username + "..."));
+            .addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "[ZH] Fetching stats for " + username + "..."));
          executor.submit(
             new Runnable() {
                @Override
@@ -154,13 +153,13 @@ public class HypixelAPI {
                      var20.printStackTrace();
                      Minecraft.getMinecraft()
                         .thePlayer
-                        .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + LanguageManager.get("api.fetch.error") + username));
+                        .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] Error fetching stats for " + username));
                   }
                }
             }
          );
       } else {
-         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + LanguageManager.get("api.key.missing")));
+         Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] API Key not configured. Use /zh api <key>"));
       }
    }
 
@@ -237,7 +236,7 @@ public class HypixelAPI {
                      if (!silentError) {
                         Minecraft.getMinecraft()
                            .thePlayer
-                           .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] " + correctName + LanguageManager.get("api.no.zombies")));
+                           .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] " + correctName + " has no Arcade/Zombies stats."));
                      }
 
                      return new HypixelAPI.ArcadeResult(null, correctName, false);
@@ -246,7 +245,7 @@ public class HypixelAPI {
                   if (!silentError) {
                      Minecraft.getMinecraft()
                         .thePlayer
-                        .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] " + correctName + LanguageManager.get("api.not.played")));
+                        .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] " + correctName + " has not played on Hypixel."));
                   }
 
                   return new HypixelAPI.ArcadeResult(null, correctName, false);
@@ -257,14 +256,14 @@ public class HypixelAPI {
                   if (!silentError || System.currentTimeMillis() - lastExpiredWarning > 30000L) {
                      Minecraft.getMinecraft()
                         .thePlayer
-                        .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + LanguageManager.get("api.key.expired")));
+                        .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "[ZH] Your Hypixel API Key is invalid or expired! Please update it in the OneConfig menu."));
                      lastExpiredWarning = System.currentTimeMillis();
                   }
                } else if (!silentError) {
                   Minecraft.getMinecraft()
                      .thePlayer
                      .addChatMessage(
-                        new ChatComponentText(EnumChatFormatting.RED + LanguageManager.get("api.hypixel.error") + LanguageManager.get("api.code") + code + ")")
+                        new ChatComponentText(EnumChatFormatting.RED + "[ZH] Hypixel API failed " + "(Code " + code + ")")
                      );
                }
 

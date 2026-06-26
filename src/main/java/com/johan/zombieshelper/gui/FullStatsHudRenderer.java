@@ -1,7 +1,6 @@
 package com.johan.zombieshelper.gui;
 
 import cc.polyfrost.oneconfig.renderer.NanoVGHelper;
-import com.johan.zombieshelper.LanguageManager;
 import com.johan.zombieshelper.api.HypixelAPI;
 import com.johan.zombieshelper.data.FullMapStats;
 import com.johan.zombieshelper.data.FullPlayerStats;
@@ -24,16 +23,16 @@ public class FullStatsHudRenderer extends Gui {
 
    private static String[] getHeaders() {
       return new String[]{
-         LanguageManager.get("stats.map"),
-         LanguageManager.get("stats.downs"),
-         LanguageManager.get("stats.revives"),
-         LanguageManager.get("stats.doors"),
-         LanguageManager.get("stats.windows"),
-         LanguageManager.get("stats.kills"),
-         LanguageManager.get("stats.deaths"),
-         LanguageManager.get("stats.best_r"),
-         LanguageManager.get("stats.wins"),
-         LanguageManager.get("stats.fast_w")
+         "Map",
+         "Downs",
+         "Revives",
+         "Doors",
+         "Windows",
+         "Kills",
+         "Deaths",
+         "Best R",
+         "Wins",
+         "Fast W"
       };
    }
 
@@ -109,7 +108,7 @@ public class FullStatsHudRenderer extends Gui {
                   );
                GlStateManager.pushMatrix();
                GlStateManager.translate((float)boxX, (float)finalBoxY, 0.0F);
-               String title = "§e§l" + this.currentStats.username + " §r§f" + LanguageManager.get("stats.title");
+               String title = "§e§l" + this.currentStats.username + " §r§f" + "- Zombies Stats";
                fr.drawStringWithShadow(title, (float)(boxW / 2 - fr.getStringWidth(title) / 2), 8.0F, 16777215);
                int yHeader = 24;
                int xCursor = 8;

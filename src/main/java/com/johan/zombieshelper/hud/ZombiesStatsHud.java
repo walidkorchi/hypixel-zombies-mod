@@ -4,7 +4,6 @@ import cc.polyfrost.oneconfig.hud.Hud;
 import cc.polyfrost.oneconfig.libs.universal.UMatrixStack;
 import cc.polyfrost.oneconfig.renderer.NanoVGHelper;
 import com.johan.zombieshelper.GameStateManager;
-import com.johan.zombieshelper.LanguageManager;
 import com.johan.zombieshelper.api.HypixelAPI;
 import com.johan.zombieshelper.data.PlayerStats;
 import com.johan.zombieshelper.data.StatsManager;
@@ -86,13 +85,13 @@ public class ZombiesStatsHud extends Hud {
    }
 
    private String buildHeaderLabel() {
-      return LanguageManager.get("hud.wins")
+      return "Wins"
          + " / "
-         + LanguageManager.get("hud.round")
+         + "Round"
          + " / "
-         + LanguageManager.get("hud.kills")
+         + "Kills"
          + " / "
-         + LanguageManager.get("hud.fast");
+         + "Fast";
    }
 
    private String buildStatsString(PlayerStats ps) {
@@ -137,9 +136,9 @@ public class ZombiesStatsHud extends Hud {
                } else if (!hasStats) {
                   String loading;
                   if (expected > 0) {
-                     loading = "§7" + LanguageManager.get("hud.loading") + " §e(" + loaded + "/" + expected + ")";
+                     loading = "§7" + "Loading stats..." + " §e(" + loaded + "/" + expected + ")";
                   } else {
-                     loading = "§7" + LanguageManager.get("hud.loading");
+                     loading = "§7" + "Loading stats...";
                   }
 
                   mc.fontRendererObj.drawStringWithShadow(loading, (float)contentW / 2.0F - (float)mc.fontRendererObj.getStringWidth(loading) / 2.0F, (float)yo, 16777215);
