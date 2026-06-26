@@ -84,6 +84,7 @@ sourceSets {
 // Adds the Polyfrost maven repository so that we can get the libraries necessary to develop the mod.
 repositories {
     maven("https://repo.polyfrost.org/releases")
+    mavenCentral()
 }
 
 // Configures the libraries/dependencies for your mod.
@@ -98,6 +99,12 @@ dependencies {
     if (platform.isLegacyForge) {
         compileOnly("org.spongepowered:mixin:0.7.11-SNAPSHOT")
         shade("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta17")
+    }
+
+    // Cross-platform Discord IPC (Windows pipe + Linux/Mac unix sockets via junixsocket),
+    // the same library CraftPresence uses. gson is excluded since Minecraft already provides it.
+    shade("io.github.CDAGaming:DiscordIPC:0.10.2") {
+        exclude(group = "com.google.code.gson")
     }
 }
 

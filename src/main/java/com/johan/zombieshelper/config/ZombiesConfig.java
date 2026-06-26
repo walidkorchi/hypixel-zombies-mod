@@ -126,11 +126,11 @@ public class ZombiesConfig extends Config {
    public boolean discordRpcEnabled = true;
    @Text(
       name = "Discord Client ID",
-      description = "The Discord application Client ID used for Rich Presence. Required: leave empty to disable RPC.",
+      description = "The Discord application Client ID used for Rich Presence. Defaults to ZombiesHelper's own app; override with your own, or clear it to disable RPC.",
       placeholder = "Your Discord application Client ID",
       category = "Discord RPC"
    )
-   public String discordClientId = "";
+   public String discordClientId = "1503113086352228603";
    @Button(
       name = "Apply Client ID",
       text = "Apply",

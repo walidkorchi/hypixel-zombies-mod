@@ -1,16 +1,15 @@
 package com.johan.zombieshelper.rpc;
 
+import com.google.gson.JsonObject;
+import com.jagrosh.discordipc.IPCClient;
+import com.jagrosh.discordipc.IPCListener;
+import com.jagrosh.discordipc.entities.Packet;
+import com.jagrosh.discordipc.entities.RichPresence;
+import com.jagrosh.discordipc.entities.User;
 import com.johan.zombieshelper.GameStateManager;
 import com.johan.zombieshelper.config.ZombiesConfig;
 import com.johan.zombieshelper.data.StatsManager;
 import com.johan.zombieshelper.session.SessionTracker;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.lang.management.ManagementFactory;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
@@ -19,15 +18,15 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 public class DiscordRPC {
+   private IPCClient client = null;
+   private volatile boolean ready = false;
+   private volatile boolean connecting = false;
    private DiscordRPC.Activity lastActivity = null;
    private String lastMap = "";
    private int lastRound = -1;
    private int lastPlayerCount = -1;
    private int lastKills = -1;
    private long activityStart = 0L;
-   private RandomAccessFile pipe = null;
-   private boolean ready = false;
-   private long nonce = 1L;
    private long lastUpdateMs = 0L;
    private int tickCounter = 0;
    private boolean warnedMissingClientId = false;
@@ -46,7 +45,7 @@ public class DiscordRPC {
    }
 
    public void shutdown() {
-      this.closePipe();
+      this.closeClient();
    }
 
    @SubscribeEvent
@@ -55,12 +54,12 @@ public class DiscordRPC {
          if (!ZombiesConfig.INSTANCE.discordRpcEnabled) {
             if (this.ready) {
                this.clearPresence();
-               this.closePipe();
+               this.closeClient();
             }
-         } else if (ZombiesConfig.INSTANCE.getDiscordClientId().isEmpty()) {
+         } else if (this.getClientId() == 0L) {
             if (this.ready) {
                this.clearPresence();
-               this.closePipe();
+               this.closeClient();
             }
 
             this.tickCounter++;
@@ -72,7 +71,7 @@ public class DiscordRPC {
                         .thePlayer
                         .addChatMessage(
                            new ChatComponentText(
-                              "§c[ZombiesHelper] §7Discord Rich Presence is on but no §eDiscord Client ID §7is set. Add one in the OneConfig menu (Discord RPC) to enable it."
+                              "§c[ZombiesHelper] §7Discord Rich Presence is on but no valid §eDiscord Client ID §7is set. Add one in the OneConfig menu (Discord RPC) to enable it."
                            )
                         );
                   }
@@ -139,159 +138,104 @@ public class DiscordRPC {
          && Minecraft.getMinecraft().getCurrentServerData().serverIP.toLowerCase().contains("hypixel.net");
    }
 
-   private void connectAsync() {
-      if (ZombiesConfig.INSTANCE.getDiscordClientId().isEmpty()) {
-         return;
-      }
-
-      Thread t = new Thread(() -> {
+   private long getClientId() {
+      String id = ZombiesConfig.INSTANCE.getDiscordClientId();
+      if (id.isEmpty()) {
+         return 0L;
+      } else {
          try {
-            RandomAccessFile p = null;
-
-            for (int i = 0; i <= 9; i++) {
-               try {
-                  p = new RandomAccessFile("\\\\.\\pipe\\discord-ipc-" + i, "rw");
-                  break;
-               } catch (FileNotFoundException var4) {
-               }
-            }
-
-            if (p == null) {
-               return;
-            }
-
-            this.pipe = p;
-            String hs = "{\"v\":1,\"client_id\":\"" + ZombiesConfig.INSTANCE.getDiscordClientId() + "\"}";
-            this.writeFrame(0, hs);
-            byte[] resp = this.readFrame();
-            if (resp != null) {
-               this.ready = true;
-               System.out.println("[ZombiesHelper] Discord RPC connected.");
-               this.activityStart = System.currentTimeMillis() / 1000L;
-               this.lastActivity = null;
-            }
-         } catch (Exception var5) {
-            System.out.println("[ZombiesHelper] Discord RPC connect failed: " + var5.getMessage());
-            this.closePipe();
+            return Long.parseLong(id);
+         } catch (NumberFormatException var3) {
+            return 0L;
          }
-      }, "ZH-DiscordRPC-Connect");
-      t.setDaemon(true);
-      t.start();
+      }
+   }
+
+   private void connectAsync() {
+      long clientId = this.getClientId();
+      if (clientId != 0L && !this.connecting && !this.ready) {
+         this.connecting = true;
+         Thread t = new Thread(() -> {
+            try {
+               IPCClient c = new IPCClient(clientId);
+               c.setListener(new DiscordRPC.Listener());
+               this.client = c;
+               c.connect();
+            } catch (Throwable var4) {
+               System.out.println("[ZombiesHelper] Discord RPC connect failed: " + var4.getMessage());
+               this.closeClient();
+            } finally {
+               this.connecting = false;
+            }
+         }, "ZH-DiscordRPC-Connect");
+         t.setDaemon(true);
+         t.start();
+      }
    }
 
    private void sendPresence(DiscordRPC.Activity activity, String map, int round, int playerCount, int kills) {
-      try {
-         String details;
-         String state;
-         switch (activity) {
-            case IN_GAME:
-               String formattedGold = String.format(Locale.US, "%,d", GameStateManager.currentGold);
-               details = "Round " + round + " - Gold: " + formattedGold;
-               int downs = SessionTracker.get().getDowns();
-               int revives = SessionTracker.get().getRevives();
-               state = "Kills: " + kills + " - Downs: " + downs + " - Revs: " + revives;
-               break;
-            case LOBBY:
-               details = "In Lobby" + (map != null && !map.isEmpty() ? " — " + map : "");
-               state = playerCount > 0 ? playerCount + "/4 players" : "Waiting for players...";
-               break;
-            case IDLE:
-            default:
-               int totalWins = SessionTracker.get().getWins();
-               int totalGames = SessionTracker.get().getGamesPlayed();
-               details = "Session: " + totalGames + " Games, " + totalWins + " Wins";
-               state = "Browsing Menus";
-         }
+      IPCClient c = this.client;
+      if (c != null && this.ready) {
+         try {
+            String details;
+            String state;
+            switch (activity) {
+               case IN_GAME:
+                  String formattedGold = String.format(Locale.US, "%,d", GameStateManager.currentGold);
+                  details = "Round " + round + " - Gold: " + formattedGold;
+                  int downs = SessionTracker.get().getDowns();
+                  int revives = SessionTracker.get().getRevives();
+                  state = "Kills: " + kills + " - Downs: " + downs + " - Revs: " + revives;
+                  break;
+               case LOBBY:
+                  details = "In Lobby" + (map != null && !map.isEmpty() ? " — " + map : "");
+                  state = playerCount > 0 ? playerCount + "/4 players" : "Waiting for players...";
+                  break;
+               case IDLE:
+               default:
+                  int totalWins = SessionTracker.get().getWins();
+                  int totalGames = SessionTracker.get().getGamesPlayed();
+                  details = "Session: " + totalGames + " Games, " + totalWins + " Wins";
+                  state = "Browsing Menus";
+            }
 
-         String smallImgKey = mapImageKey(map);
-         String assetsStr = "\"large_image\":\"logo\",\"large_text\":\"Hypixel Zombies\"";
-         if (!smallImgKey.equals("logo") && activity != DiscordRPC.Activity.IDLE) {
-            assetsStr = assetsStr + ",\"small_image\":\"" + smallImgKey + "\",\"small_text\":\"" + map + "\"";
-         }
+            RichPresence.Builder builder = new RichPresence.Builder();
+            builder.setDetails(details);
+            builder.setState(state);
+            builder.setStartTimestamp(this.activityStart);
+            builder.setLargeImage("logo", "Hypixel Zombies");
+            String smallImgKey = mapImageKey(map);
+            if (!smallImgKey.equals("logo") && activity != DiscordRPC.Activity.IDLE) {
+               builder.setSmallImage(smallImgKey, map);
+            }
 
-         String payload = "{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"
-            + getPid()
-            + ",\"activity\":{\"details\":"
-            + jsonStr(details)
-            + ",\"state\":"
-            + jsonStr(state)
-            + ",\"timestamps\":{\"start\":"
-            + this.activityStart
-            + "},\"assets\":{"
-            + assetsStr
-            + "}}},\"nonce\":\""
-            + this.nonce++
-            + "\"}";
-         this.writeFrame(1, payload);
-         this.readFrameAsync();
-      } catch (Exception var13) {
-         System.out.println("[ZombiesHelper] Discord RPC send failed: " + var13.getMessage());
-         this.closePipe();
-         this.ready = false;
+            c.sendRichPresence(builder.build());
+         } catch (Exception var13) {
+            System.out.println("[ZombiesHelper] Discord RPC send failed: " + var13.getMessage());
+            this.closeClient();
+         }
       }
    }
 
    private void clearPresence() {
-      try {
-         String payload = "{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":" + getPid() + "},\"nonce\":\"" + this.nonce++ + "\"}";
-         this.writeFrame(1, payload);
-         this.readFrameAsync();
-      } catch (Exception var2) {
-      }
-   }
-
-   private synchronized void writeFrame(int opcode, String json) throws IOException {
-      if (this.pipe == null) {
-         throw new IOException("Pipe is null");
-      } else {
-         byte[] data = json.getBytes(StandardCharsets.UTF_8);
-         ByteBuffer buf = ByteBuffer.allocate(8 + data.length).order(ByteOrder.LITTLE_ENDIAN);
-         buf.putInt(opcode);
-         buf.putInt(data.length);
-         buf.put(data);
-         this.pipe.write(buf.array());
-      }
-   }
-
-   private synchronized byte[] readFrame() throws IOException {
-      if (this.pipe == null) {
-         return null;
-      } else {
-         byte[] header = new byte[8];
-         this.pipe.readFully(header);
-         ByteBuffer h = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN);
-         h.getInt();
-         int len = h.getInt();
-         if (len > 0 && len <= 65536) {
-            byte[] body = new byte[len];
-            this.pipe.readFully(body);
-            return body;
-         } else {
-            return null;
-         }
-      }
-   }
-
-   private void readFrameAsync() {
-      Thread t = new Thread(() -> {
+      IPCClient c = this.client;
+      if (c != null) {
          try {
-            this.readFrame();
-         } catch (Exception var2) {
+            c.sendRichPresence(null);
+         } catch (Exception var3) {
          }
-      }, "ZH-DiscordRPC-Read");
-      t.setDaemon(true);
-      t.start();
+      }
    }
 
-   private void closePipe() {
+   private void closeClient() {
       this.ready = false;
-
-      try {
-         if (this.pipe != null) {
-            this.pipe.close();
-            this.pipe = null;
+      IPCClient c = this.client;
+      this.client = null;
+      if (c != null) {
+         try {
+            c.close();
+         } catch (Exception var3) {
          }
-      } catch (Exception var2) {
       }
    }
 
@@ -312,22 +256,41 @@ public class DiscordRPC {
       }
    }
 
-   private static String jsonStr(String s) {
-      return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
-   }
-
-   private static int getPid() {
-      try {
-         String name = ManagementFactory.getRuntimeMXBean().getName();
-         return Integer.parseInt(name.split("@")[0]);
-      } catch (Exception var1) {
-         return 0;
-      }
-   }
-
    private static enum Activity {
       IDLE,
       LOBBY,
       IN_GAME;
+   }
+
+   private class Listener implements IPCListener {
+      public void onReady(IPCClient client) {
+         DiscordRPC.this.ready = true;
+         DiscordRPC.this.lastActivity = null;
+         DiscordRPC.this.activityStart = System.currentTimeMillis() / 1000L;
+         System.out.println("[ZombiesHelper] Discord RPC connected.");
+      }
+
+      public void onClose(IPCClient client, JsonObject json) {
+         DiscordRPC.this.ready = false;
+      }
+
+      public void onDisconnect(IPCClient client, Throwable t) {
+         DiscordRPC.this.ready = false;
+      }
+
+      public void onPacketSent(IPCClient client, Packet packet) {
+      }
+
+      public void onPacketReceived(IPCClient client, Packet packet) {
+      }
+
+      public void onActivityJoin(IPCClient client, String secret) {
+      }
+
+      public void onActivitySpectate(IPCClient client, String secret) {
+      }
+
+      public void onActivityJoinRequest(IPCClient client, String secret, User user) {
+      }
    }
 }
