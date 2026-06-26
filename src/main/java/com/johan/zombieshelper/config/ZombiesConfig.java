@@ -126,11 +126,11 @@ public class ZombiesConfig extends Config {
    public boolean discordRpcEnabled = true;
    @Text(
       name = "Discord Client ID",
-      description = "The Discord application Client ID used for Rich Presence. Leave default unless you use your own app.",
-      placeholder = "1503113086352228603",
+      description = "The Discord application Client ID used for Rich Presence. Required: leave empty to disable RPC.",
+      placeholder = "Your Discord application Client ID",
       category = "Discord RPC"
    )
-   public String discordClientId = "1503113086352228603";
+   public String discordClientId = "";
    @Button(
       name = "Apply Client ID",
       text = "Apply",
@@ -171,7 +171,7 @@ public class ZombiesConfig extends Config {
    }
 
    public String getDiscordClientId() {
-      return this.discordClientId != null && !this.discordClientId.trim().isEmpty() ? this.discordClientId.trim() : "1503113086352228603";
+      return this.discordClientId == null ? "" : this.discordClientId.trim();
    }
 
    public String getAAChallengeString() {

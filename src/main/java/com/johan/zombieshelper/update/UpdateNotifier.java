@@ -131,9 +131,6 @@ public class UpdateNotifier {
    private void drawUpdateBox(float x, float y, float scale, float progressPct) {
       Minecraft mc = Minecraft.getMinecraft();
       if (mc != null && mc.fontRendererObj != null) {
-         float W = 190.0F;
-         float H = 40.0F;
-         float PADDING = 5.0F;
          float bgW = 190.0F * scale;
          float bgH = 40.0F * scale;
          NanoVGHelper.INSTANCE.setupAndDraw(true, vg -> {

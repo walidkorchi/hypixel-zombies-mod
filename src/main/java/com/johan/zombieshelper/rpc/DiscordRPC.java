@@ -13,6 +13,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -29,6 +30,7 @@ public class DiscordRPC {
    private long nonce = 1L;
    private long lastUpdateMs = 0L;
    private int tickCounter = 0;
+   private boolean warnedMissingClientId = false;
    private static DiscordRPC instance;
 
    public static DiscordRPC getInstance() {
@@ -55,6 +57,29 @@ public class DiscordRPC {
                this.clearPresence();
                this.closePipe();
             }
+         } else if (ZombiesConfig.INSTANCE.getDiscordClientId().isEmpty()) {
+            if (this.ready) {
+               this.clearPresence();
+               this.closePipe();
+            }
+
+            this.tickCounter++;
+            if (this.tickCounter % 20 == 0) {
+               if (this.isOnHypixel()) {
+                  if (!this.warnedMissingClientId && Minecraft.getMinecraft().thePlayer != null) {
+                     this.warnedMissingClientId = true;
+                     Minecraft.getMinecraft()
+                        .thePlayer
+                        .addChatMessage(
+                           new ChatComponentText(
+                              "§c[ZombiesHelper] §7Discord Rich Presence is on but no §eDiscord Client ID §7is set. Add one in the OneConfig menu (Discord RPC) to enable it."
+                           )
+                        );
+                  }
+               } else {
+                  this.warnedMissingClientId = false;
+               }
+            }
          } else if (!this.ready) {
             this.tickCounter++;
             if (this.tickCounter % 200 == 0) {
@@ -63,14 +88,7 @@ public class DiscordRPC {
          } else {
             this.tickCounter++;
             if (this.tickCounter % 20 == 0) {
-               boolean onHypixel = false;
-               if (Minecraft.getMinecraft().getCurrentServerData() != null) {
-                  String ip = Minecraft.getMinecraft().getCurrentServerData().serverIP.toLowerCase();
-                  if (ip.contains("hypixel.net")) {
-                     onHypixel = true;
-                  }
-               }
-
+               boolean onHypixel = this.isOnHypixel();
                if (!onHypixel) {
                   if (this.ready && this.lastActivity != null) {
                      this.clearPresence();
@@ -116,7 +134,16 @@ public class DiscordRPC {
       }
    }
 
+   private boolean isOnHypixel() {
+      return Minecraft.getMinecraft().getCurrentServerData() != null
+         && Minecraft.getMinecraft().getCurrentServerData().serverIP.toLowerCase().contains("hypixel.net");
+   }
+
    private void connectAsync() {
+      if (ZombiesConfig.INSTANCE.getDiscordClientId().isEmpty()) {
+         return;
+      }
+
       Thread t = new Thread(() -> {
          try {
             RandomAccessFile p = null;

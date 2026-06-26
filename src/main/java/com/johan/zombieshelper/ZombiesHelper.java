@@ -34,7 +34,8 @@ public class ZombiesHelper {
 
    @EventHandler
    public void preInit(FMLPreInitializationEvent event) {
-      ZombiesConfig config = ZombiesConfig.INSTANCE;
+      // Touch the config singleton so OneConfig registers it during pre-init.
+      ZombiesConfig.INSTANCE.getClass();
    }
 
    @EventHandler

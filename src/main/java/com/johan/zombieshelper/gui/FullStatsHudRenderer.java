@@ -88,11 +88,9 @@ public class FullStatsHudRenderer extends Gui {
 
                int PAD = 8;
                int ROW_H = 13;
-               int TITLE_H = 14;
-               int SEPARATOR = 2;
                int BAR_H = 4;
-               int boxW = totalColsWidth + 16;
-               int boxH = 39 + rows.length * 13 + 2 + 4 + 8;
+               int boxW = totalColsWidth + PAD * 2;
+               int boxH = 39 + rows.length * ROW_H + 2 + BAR_H + PAD;
                int boxX = (sr.getScaledWidth() - boxW) / 2;
                int tempBoxY = sr.getScaledHeight() - boxH - 20;
                if (tempBoxY < 10) {
@@ -109,7 +107,7 @@ public class FullStatsHudRenderer extends Gui {
                String title = "§e§l" + this.currentStats.username + " §r§f" + "- Zombies Stats";
                fr.drawStringWithShadow(title, (float)(boxW / 2 - fr.getStringWidth(title) / 2), 8.0F, 16777215);
                int yHeader = 24;
-               int xCursor = 8;
+               int xCursor = PAD;
 
                for (int c = 0; c < 10; c++) {
                   int cellX = c == 0 ? xCursor : xCursor + colW[c] - fr.getStringWidth(headers[c]) - 5;
@@ -117,34 +115,34 @@ public class FullStatsHudRenderer extends Gui {
                   xCursor += colW[c];
                }
 
-               drawRect(8, yHeader + 13 - 1, boxW - 8, yHeader + 13, 1157627903);
-               int yData = yHeader + 13 + 2;
+               drawRect(PAD, yHeader + ROW_H - 1, boxW - PAD, yHeader + ROW_H, 1157627903);
+               int yData = yHeader + ROW_H + 2;
 
                for (int r = 0; r < rows.length; r++) {
                   String mapColor = HypixelAPI.getMapColor(this.currentStats.maps.get(r).mapName);
-                  xCursor = 8;
+                  xCursor = PAD;
 
                   for (int c = 0; c < 10; c++) {
                      String cell = rows[r][c];
                      String colored = c == 0 ? mapColor + cell : "§f" + cell;
                      int textX = c == 0 ? xCursor : xCursor + colW[c] - fr.getStringWidth(cell) - 5;
-                     fr.drawStringWithShadow(colored, (float)textX, (float)(yData + r * 13), 16777215);
+                     fr.drawStringWithShadow(colored, (float)textX, (float)(yData + r * ROW_H), 16777215);
                      xCursor += colW[c];
                   }
                }
 
-               int barY = boxH - 8 - 4;
+               int barY = boxH - PAD - BAR_H;
                long remaining = this.expiryTime - System.currentTimeMillis();
                float fraction = (float)remaining / 20000.0F;
                if (fraction < 0.0F) {
                   fraction = 0.0F;
                }
 
-               drawRect(8, barY, boxW - 8, barY + 4, 1157627903);
-               int barFill = (int)((float)(boxW - 16) * fraction);
+               drawRect(PAD, barY, boxW - PAD, barY + BAR_H, 1157627903);
+               int barFill = (int)((float)(boxW - PAD * 2) * fraction);
                int barColor = fraction > 0.5F ? -11141291 : (fraction > 0.25F ? -22016 : -43691);
                if (barFill > 0) {
-                  drawRect(8, barY, 8 + barFill, barY + 4, barColor);
+                  drawRect(PAD, barY, PAD + barFill, barY + BAR_H, barColor);
                }
 
                GlStateManager.popMatrix();
